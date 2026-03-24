@@ -1,5 +1,11 @@
 import { getContract } from "@/lib/contracts";
 
+export type StoredFile = {
+  cid: string;
+  filename: string;
+  timestamp: number;
+};
+
 // Upload CID to blockchain
 export const uploadToBlockchain = async (
   cid: string,
@@ -22,15 +28,25 @@ export const uploadToBlockchain = async (
   }
 };
 
-// Fetch user files
-export const getFiles = async () => {
+export const deleteFromBlockchain = async (index: number) => {
   try {
     const contract = await getContract();
-    const files = await contract.getMyFiles();
-
-    return files;
+    const tx = await contract.deleteFile(index);
+    await tx.wait();
   } catch (error) {
-    console.error("Fetching files failed:", error);
-    return [];
+    console.error("Blockchain delete failed:", error);
+    throw error;
   }
+};
+
+// Fetch user files
+export const getFiles = async (): Promise<StoredFile[]> => {
+  const contract = await getContract();
+  const files = await contract.getMyFiles();
+
+  return files.map((file: { cid: string; filename: string; timestamp: bigint }) => ({
+    cid: file.cid,
+    filename: file.filename,
+    timestamp: Number(file.timestamp),
+  }));
 };

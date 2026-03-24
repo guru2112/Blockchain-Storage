@@ -26,4 +26,16 @@ contract FileStorage {
     function getMyFiles() public view returns (File[] memory) {
         return userFiles[msg.sender];
     }
+
+    // Delete file metadata by index
+    function deleteFile(uint256 index) public {
+        require(index < userFiles[msg.sender].length, "Invalid index");
+
+        uint256 lastIndex = userFiles[msg.sender].length - 1;
+        if (index != lastIndex) {
+            userFiles[msg.sender][index] = userFiles[msg.sender][lastIndex];
+        }
+
+        userFiles[msg.sender].pop();
+    }
 }

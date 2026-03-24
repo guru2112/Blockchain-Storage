@@ -1,122 +1,214 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getFiles } from "@/lib/blockchain";
+import { useCallback, useEffect, useState } from "react";
+import { deleteFromBlockchain, getFiles, StoredFile } from "@/lib/blockchain";
+import { decryptFile } from "@/lib/crypto";
 
-type FileType = {
-  cid: string;
-  filename: string;
-  timestamp: bigint;
+type FileListProps = {
+  refreshKey?: string | number;
 };
 
-export default function FileList() {
-  const [files, setFiles] = useState<FileType[]>([]);
+const IPFS_GATEWAY = "https://ipfs.io/ipfs";
+
+export default function FileList({ refreshKey }: FileListProps) {
+  const [files, setFiles] = useState<StoredFile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [actionIndex, setActionIndex] = useState<number | null>(null);
+  const [preview, setPreview] = useState<{
+    url: string;
+    name: string;
+  } | null>(null);
+
+  const fetchFiles = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await getFiles();
+      setFiles(data);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Unable to load files.";
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }, [getFiles]);
 
   useEffect(() => {
-    const fetchFiles = async () => {
-      try {
-        const data = await getFiles();
-
-        console.log("📂 Files from blockchain:", data);
-
-        // ✅ FIX: Type assertion
-        const formattedFiles: FileType[] = Array.from(data as FileType[]);
-
-        setFiles(formattedFiles);
-      } catch (error) {
-        console.error("Error fetching files:", error);
-      }
-      setLoading(false);
-    };
-
     fetchFiles();
-  }, []);
+  }, [fetchFiles, refreshKey]);
+
+  const fetchDecrypted = async (cid: string) => {
+    const res = await fetch(`${IPFS_GATEWAY}/${cid}`);
+    if (!res.ok) {
+      throw new Error("Failed to fetch file from IPFS.");
+    }
+
+    const encrypted = await res.text();
+    return decryptFile(encrypted);
+  };
+
+  const handlePreview = async (file: StoredFile, index: number) => {
+    setActionIndex(index);
+    setError(null);
+
+    try {
+      const url = await fetchDecrypted(file.cid);
+      setPreview({ url, name: file.filename });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Unable to preview file.";
+      setError(message);
+    } finally {
+      setActionIndex(null);
+    }
+  };
+
+  const handleDownload = async (file: StoredFile, index: number) => {
+    setActionIndex(index);
+    setError(null);
+
+    try {
+      const url = await fetchDecrypted(file.cid);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = file.filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Unable to download file.";
+      setError(message);
+    } finally {
+      setActionIndex(null);
+    }
+  };
+
+  const handleDelete = async (index: number) => {
+    setActionIndex(index);
+    setError(null);
+
+    try {
+      await deleteFromBlockchain(index);
+      await fetchFiles();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Unable to delete file.";
+      setError(message);
+    } finally {
+      setActionIndex(null);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <p className="text-sm text-slate-600">Loading your files...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/60 bg-white/90 p-6 shadow-xl backdrop-blur">
-      <div className="pointer-events-none absolute -left-20 top-6 h-48 w-48 rounded-full bg-indigo-200/50 blur-3xl" />
-      <div className="pointer-events-none absolute -right-24 bottom-0 h-56 w-56 rounded-full bg-blue-200/50 blur-3xl" />
-
-      <div className="relative space-y-3">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-indigo-600">
-              Files
-            </p>
-            <h2 className="text-xl font-bold text-slate-900">Your uploads</h2>
-            <p className="text-sm text-slate-600">
-              Review what&apos;s anchored on-chain and open files directly from IPFS.
-            </p>
-          </div>
-          <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 shadow-sm">
-            {files.length} stored
-          </span>
+    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold text-slate-900">Your files</h3>
+          <p className="text-sm text-slate-600">
+            Only files owned by your wallet are shown here.
+          </p>
         </div>
-
-        {loading ? (
-          <div className="grid gap-3 md:grid-cols-2">
-            {[1, 2, 3].map((item) => (
-              <div
-                key={item}
-                className="h-28 rounded-xl border border-slate-200/80 bg-white/70 p-4 shadow-sm"
-              >
-                <div className="flex h-full flex-col justify-between animate-pulse space-y-2">
-                  <div className="h-3 w-1/2 rounded-full bg-slate-200" />
-                  <div className="h-3 w-3/4 rounded-full bg-slate-200" />
-                  <div className="h-3 w-1/3 rounded-full bg-slate-200" />
-                  <div className="h-8 w-full rounded-lg bg-slate-200" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : files.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-200 bg-white/80 p-6 text-center shadow-sm">
-            <p className="text-sm font-semibold text-slate-800">
-              No files uploaded yet
-            </p>
-            <p className="text-sm text-slate-500">
-              Upload a file to see it logged on-chain and retrievable from IPFS.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {/* ✅ SAFE reverse */}
-            {[...files].reverse().map((file, index) => (
-              <div
-                key={index}
-                className="group relative overflow-hidden rounded-xl border border-slate-200/80 bg-white/90 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg"
-              >
-                <div className="absolute right-3 top-3 h-8 w-8 rounded-full bg-blue-50" />
-
-                <div className="relative space-y-2">
-                  <p className="text-sm font-semibold text-slate-900">
-                    {file.filename}
-                  </p>
-
-                  <p className="text-xs text-slate-500 break-all">
-                    {file.cid}
-                  </p>
-
-                  <p className="text-xs text-slate-400">
-                    {new Date(Number(file.timestamp) * 1000).toLocaleString()}
-                  </p>
-
-                  <a
-                    href={`https://ipfs.io/ipfs/${file.cid}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-sm font-semibold text-blue-700 transition hover:gap-2"
-                  >
-                    View on IPFS
-                    <span aria-hidden>↗</span>
-                  </a>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600">
+          {files.length} files
+        </span>
       </div>
+
+      {error && (
+        <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </p>
+      )}
+
+      {files.length === 0 ? (
+        <p className="mt-6 text-sm text-slate-600">
+          No files yet. Upload your first encrypted file to get started.
+        </p>
+      ) : (
+        <div className="mt-6 grid gap-4">
+          {files.map((file, index) => {
+            const isBusy = actionIndex === index;
+            const time = new Date(file.timestamp * 1000).toLocaleString();
+
+            return (
+              <div
+                key={`${file.cid}-${index}`}
+                className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">
+                      {file.filename}
+                    </p>
+                    <p className="text-xs text-slate-500">Uploaded {time}</p>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => handlePreview(file, index)}
+                      disabled={isBusy}
+                      className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-blue-200 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      Preview
+                    </button>
+                    <button
+                      onClick={() => handleDownload(file, index)}
+                      disabled={isBusy}
+                      className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-blue-200 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      Download
+                    </button>
+                    <button
+                      onClick={() => handleDelete(index)}
+                      disabled={isBusy}
+                      className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-medium text-red-700 transition hover:border-red-300 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {preview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
+          <div className="w-full max-w-4xl rounded-2xl bg-white p-4 shadow-xl">
+            <div className="flex items-center justify-between gap-4 border-b border-slate-200 pb-3">
+              <div>
+                <p className="text-sm font-semibold text-slate-900">Preview</p>
+                <p className="text-xs text-slate-500">{preview.name}</p>
+              </div>
+              <button
+                onClick={() => setPreview(null)}
+                className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-700"
+              >
+                Close
+              </button>
+            </div>
+            <div className="mt-4 h-[70vh] w-full overflow-hidden rounded-xl border border-slate-200">
+              <iframe
+                title="File preview"
+                src={preview.url}
+                className="h-full w-full"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
