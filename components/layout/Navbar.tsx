@@ -7,9 +7,9 @@ import {
   connectWallet,
   signLogin,
   clearCachedLoginSignature,
-} from "@/lib/wallet";
-import { getWallet, setWallet, logout } from "@/lib/auth";
-import { clearEncryptionKey } from "@/lib/crypto";
+} from "@/lib/utils/wallet";
+import { getWallet, setWallet, logout } from "@/lib/utils/auth";
+import { clearEncryptionKey } from "@/lib/utils/crypto";
 
 export default function Navbar() {
   const router = useRouter();

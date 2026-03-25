@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { getSharedFiles, StoredFile } from "@/lib/blockchain";
-import { decryptSharedFile } from "@/lib/crypto";
+import { decryptSharedFile } from "@/lib/utils/crypto";
 
 interface SharedFileWithSender extends StoredFile {
   sender: string;
@@ -37,7 +37,6 @@ export default function SharedFilesReceived({ refreshKey }: SharedFilesReceivedP
         return;
       }
 
-      setSenders(senderList);
 
       const allSharedFiles: SharedFileWithSender[] = [];
 

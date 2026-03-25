@@ -5,11 +5,7 @@ const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
 const expectedChainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID);
 
 // 👇 Extend window type locally (no global file needed)
-declare global {
-  interface Window {
-    ethereum?: unknown;
-  }
-}
+// ...existing code...
 
 export const getContract = async () => {
   if (typeof window === "undefined") {

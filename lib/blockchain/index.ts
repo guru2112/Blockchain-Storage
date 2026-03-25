@@ -1,4 +1,4 @@
-import { getContract } from "@/lib/contracts";
+import { getContract } from "@/lib/blockchain/contracts";
 
 export type StoredFile = {
   cid: string;

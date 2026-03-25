@@ -1,12 +1,8 @@
 import { ethers } from "ethers";
 import CryptoJS from "crypto-js";
-import { getCachedLoginSignature, getEncryptionMessage } from "@/lib/wallet";
+import { getCachedLoginSignature, getEncryptionMessage } from "@/lib/utils/wallet";
 
-declare global {
-  interface Window {
-    ethereum?: unknown;
-  }
-}
+// ...existing code...
 
 let cachedKey: string | null = null;
 

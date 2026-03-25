@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { uploadToBlockchain } from "@/lib/blockchain";
-import { encryptFile } from "@/lib/crypto";
+import { encryptFile } from "@/lib/utils/crypto";
 
 type UploadProps = {
   onUploadSuccess?: () => void;

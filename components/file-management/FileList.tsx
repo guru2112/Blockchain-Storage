@@ -10,8 +10,8 @@ import {
   StoredFolder,
   sharePendingFileWith,
 } from "@/lib/blockchain";
-import { decryptSharedFile } from "@/lib/crypto";
-import ShareFileModal from "./ShareFileModal";
+import { decryptSharedFile } from "@/lib/utils/crypto";
+import ShareFileModal from "../modals/ShareFileModal";
 import Upload from "./Upload";
 
 type FileListProps = {

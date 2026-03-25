@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { logout } from "@/lib/auth";
-import { clearCachedLoginSignature } from "@/lib/wallet";
-import { clearEncryptionKey } from "@/lib/crypto";
+import { logout } from "@/lib/utils/auth";
+import { clearCachedLoginSignature } from "@/lib/utils/wallet";
+import { clearEncryptionKey } from "@/lib/utils/crypto";
 
 export const useProtectHistory = () => {
   const router = useRouter();

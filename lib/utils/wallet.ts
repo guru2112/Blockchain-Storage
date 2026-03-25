@@ -1,10 +1,6 @@
 import { ethers } from "ethers";
 
-declare global {
-  interface Window {
-    ethereum?: unknown;
-  }
-}
+// ...existing code...
 
 let cachedLoginSignature: string | null = null;
 

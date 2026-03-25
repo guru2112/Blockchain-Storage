@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getWallet } from "@/lib/auth";
-import { useProtectHistory } from "@/lib/useProtectHistory";
-import CreateFolderModal from "@/components/CreateFolderModal";
-import FileList from "@/components/FileList";
-import PendingShares from "@/components/PendingShares";
-import SharedFilesReceived from "@/components/SharedFilesReceived";
+import { getWallet } from "@/lib/utils/auth";
+import { useProtectHistory } from "@/lib/hooks/useProtectHistory";
+import CreateFolderModal from "@/components/modals/CreateFolderModal";
+import FileList from "@/components/file-management/FileList";
+import PendingShares from "@/components/sharing/PendingShares";
+import SharedFilesReceived from "@/components/sharing/SharedFilesReceived";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -119,7 +119,6 @@ export default function Dashboard() {
         isOpen={showCreateFolder}
         onClose={() => setShowCreateFolder(false)}
         onSuccess={handleFolderCreated}
-        parentId={currentFolderId}
       />
     </main>
   );
