@@ -13,7 +13,7 @@ export default function LoginPage() {
   useEffect(() => {
     const stored = getWallet();
     if (stored) {
-      router.push("/dashboard");
+      router.replace("/dashboard");
     }
   }, [router]);
 
@@ -27,7 +27,7 @@ export default function LoginPage() {
       const address = await connectWallet();
       await signLogin();
       setWallet(address);
-      router.push("/dashboard");
+      router.replace("/dashboard");
     } catch (err: unknown) {
       setError(
         err instanceof Error ? err.message : "Unable to connect wallet right now."
@@ -62,3 +62,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

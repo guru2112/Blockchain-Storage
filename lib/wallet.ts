@@ -14,6 +14,11 @@ export const clearCachedLoginSignature = () => {
   cachedLoginSignature = null;
 };
 
+// For signLogin to store signature
+export const setLoginSignature = (signature: string) => {
+  cachedLoginSignature = signature;
+};
+
 export const getEncryptionMessage = (address: string) =>
   `Decentralized Drive encryption key for ${address}`;
 
@@ -49,7 +54,7 @@ export const connectWallet = async (): Promise<string> => {
     const provider = new ethers.BrowserProvider(window.ethereum!);
     await provider.send("eth_requestAccounts", []);
     const signer = await provider.getSigner();
-    return signer.getAddress();
+    return await signer.getAddress();
   } catch (error: unknown) {
     const err = error as { code?: number };
     if (err.code === 4001) {
@@ -70,7 +75,7 @@ export const signLogin = async (): Promise<string> => {
     const address = await signer.getAddress();
     const message = getEncryptionMessage(address);
     const signature = await signer.signMessage(message);
-    cachedLoginSignature = signature;
+    setLoginSignature(signature);
     return signature;
   } catch (error: unknown) {
     const err = error as { code?: number };

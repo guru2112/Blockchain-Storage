@@ -2,14 +2,28 @@ import { ethers } from "ethers";
 import hre from "hardhat";
 
 async function main() {
-  const provider = new ethers.JsonRpcProvider(
-    process.env.SEPOLIA_RPC_URL
-  );
+  // Detect which network we're deploying to
+  let provider;
+  let wallet;
 
-  const wallet = new ethers.Wallet(
-    process.env.SEPOLIA_PRIVATE_KEY!,
-    provider
-  );
+  // Check if we're using localhost (hardhat node)
+  if (process.env.HARDHAT_NETWORK === "localhost" || hre.network.name === "localhost") {
+    // Connect to local hardhat node
+    provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
+    // Use first default hardhat account
+    const signer = await hre.ethers.provider.getSigner(0);
+    wallet = signer;
+  } else {
+    // Use Sepolia testnet
+    provider = new ethers.JsonRpcProvider(
+      process.env.SEPOLIA_RPC_URL
+    );
+
+    wallet = new ethers.Wallet(
+      process.env.SEPOLIA_PRIVATE_KEY!,
+      provider
+    );
+  }
 
   const artifact = await hre.artifacts.readArtifact("FileStorage");
 
@@ -25,7 +39,10 @@ async function main() {
 
   await contract.waitForDeployment();
 
-  console.log("✅ Contract deployed to:", await contract.getAddress());
+  const deployedAddress = await contract.getAddress();
+  console.log("✅ Contract deployed to:", deployedAddress);
+  console.log("\n📝 Update your .env.local with:");
+  console.log(`NEXT_PUBLIC_CONTRACT_ADDRESS=${deployedAddress}`);
 }
 
 main().catch((error) => {
