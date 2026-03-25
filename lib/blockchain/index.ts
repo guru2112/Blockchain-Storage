@@ -32,7 +32,7 @@ export const createFolder = async (
     }
 
     const tx = await contract.createFolder(name, parentId);
-    const receipt = await tx.wait();
+    await tx.wait();
 
     console.log("✅ Folder created on blockchain");
     

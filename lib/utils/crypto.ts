@@ -4,7 +4,7 @@ import { getCachedLoginSignature, getEncryptionMessage } from "@/lib/wallet";
 
 declare global {
   interface Window {
-    ethereum?: any;
+    ethereum?: unknown;
   }
 }
 

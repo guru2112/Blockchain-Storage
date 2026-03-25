@@ -7,7 +7,7 @@ const expectedChainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID);
 // 👇 Extend window type locally (no global file needed)
 declare global {
   interface Window {
-    ethereum?: any;
+    ethereum?: unknown;
   }
 }
 

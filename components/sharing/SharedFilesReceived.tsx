@@ -21,8 +21,7 @@ export default function SharedFilesReceived({ refreshKey }: SharedFilesReceivedP
   const [preview, setPreview] = useState<{ url: string; name: string } | null>(null);
   const [actionIndex, setActionIndex] = useState<number | null>(null);
 
-  // List of known senders to check (you can expand this based on pending shares)
-  const [senders, setSenders] = useState<string[]>([]);
+  // Note: senders list managed by shared files data from blockchain
 
   const fetchSharedFiles = useCallback(async () => {
     setLoading(true);

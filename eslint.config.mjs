@@ -12,6 +12,17 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Auto-generated files
+    "contracts/artifacts/**",
+    "contracts/types/**",
+    "contracts/cache/**",
+    // Old scripts
+    "reorganize.js",
+    "reorganize.py",
+    "reorganize_project.bat",
+    "full_reorganize.bat",
+    "reorganize_structure.bat",
+    "create_dirs.bat",
   ]),
 ]);
 

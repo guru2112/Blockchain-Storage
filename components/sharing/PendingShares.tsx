@@ -82,7 +82,7 @@ export default function PendingShares({ refreshKey }: PendingSharesProps) {
   if (pendingShares.length === 0) {
     return (
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm text-slate-600">No pending shares. You'll receive notifications when files are shared with you.</p>
+        <p className="text-sm text-slate-600">No pending shares. You&apos;ll receive notifications when files are shared with you.</p>
       </div>
     );
   }
