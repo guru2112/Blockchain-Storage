@@ -250,3 +250,47 @@ export const sharePendingFileWith = async (recipient: string, fileIndex: number)
     throw error;
   }
 };
+
+// ==================== USER PROFILE FUNCTIONS ====================
+
+// Set user's display name
+export const setUserName = async (name: string): Promise<void> => {
+  try {
+    if (!name || name.trim() === "") {
+      throw new Error("Name cannot be empty");
+    }
+    if (name.length > 50) {
+      throw new Error("Name must be 50 characters or less");
+    }
+
+    const contract = await getContract();
+    
+    if (typeof contract.setUserName !== "function") {
+      throw new Error("Your smart contract needs to be updated to support user names. Please redeploy the updated FileStorage contract.");
+    }
+
+    const tx = await contract.setUserName(name);
+    await tx.wait();
+    console.log("✅ Username set on blockchain");
+  } catch (error) {
+    console.error("Failed to set username:", error);
+    throw error;
+  }
+};
+
+// Get user's display name
+export const getUserName = async (userAddress: string): Promise<string> => {
+  try {
+    const contract = await getContract();
+    
+    if (typeof contract.getUserName !== "function") {
+      throw new Error("Your smart contract needs to be updated to support user names.");
+    }
+
+    const name = await contract.getUserName(userAddress);
+    return name || "";
+  } catch (error) {
+    console.error("Failed to get username:", error);
+    return "";
+  }
+};

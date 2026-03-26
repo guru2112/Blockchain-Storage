@@ -23,12 +23,32 @@ contract FileStorage {
         uint256 timestamp;
     }
 
+    struct FriendRequest {
+        address requester;
+        uint256 timestamp;
+    }
+
     mapping(address => File[]) private userFiles;
     mapping(address => mapping(uint256 => Folder)) private userFolders;
     mapping(address => uint256) private nextFolderId;
     mapping(address => mapping(address => uint256[])) private sharedFiles;
     mapping(address => PendingShare[]) private pendingShares;
     mapping(address => mapping(address => bool)) private hasAcceptedShare;
+    
+    // Friend management mappings
+    mapping(address => address[]) private friendsList;
+    mapping(address => FriendRequest[]) private pendingFriendRequests;
+    mapping(address => mapping(address => bool)) private isFriend;
+    
+    // User profile mappings
+    mapping(address => string) private userNames;
+
+    // Events
+    event FriendRequestSent(address indexed from, address indexed to, uint256 timestamp);
+    event FriendRequestAccepted(address indexed user1, address indexed user2, uint256 timestamp);
+    event FriendRequestRejected(address indexed user, address indexed requester, uint256 timestamp);
+    event FriendRemoved(address indexed user, address indexed friend, uint256 timestamp);
+    event UserNameSet(address indexed user, string name, uint256 timestamp);
 
     constructor() {
         // Root folder (id=0) always exists for all users
@@ -233,5 +253,158 @@ contract FileStorage {
             files[i] = userFiles[owner][indices[i]];
         }
         return files;
+    }
+
+    // ==================== FRIEND MANAGEMENT FUNCTIONS ====================
+
+    // Send a friend request to another user
+    function sendFriendRequest(address recipient) public {
+        require(recipient != address(0), "Invalid recipient address");
+        
+        // Check if already friends
+        require(!isFriend[msg.sender][recipient], "Already friends with this address");
+        
+        // Check if already sent a request to this user
+        for (uint256 i = 0; i < pendingFriendRequests[recipient].length; i++) {
+            require(
+                pendingFriendRequests[recipient][i].requester != msg.sender,
+                "Friend request already sent to this address"
+            );
+        }
+        
+        pendingFriendRequests[recipient].push(FriendRequest({
+            requester: msg.sender,
+            timestamp: block.timestamp
+        }));
+        
+        emit FriendRequestSent(msg.sender, recipient, block.timestamp);
+    }
+
+    // Get all pending friend requests for current user
+    function getPendingFriendRequests() public view returns (FriendRequest[] memory) {
+        return pendingFriendRequests[msg.sender];
+    }
+
+    // Accept a friend request
+    function acceptFriendRequest(address requester) public {
+        require(requester != address(0), "Invalid requester address");
+        
+        // Find and remove the friend request
+        uint256 requestIndex = type(uint256).max;
+        for (uint256 i = 0; i < pendingFriendRequests[msg.sender].length; i++) {
+            if (pendingFriendRequests[msg.sender][i].requester == requester) {
+                requestIndex = i;
+                break;
+            }
+        }
+        
+        require(requestIndex != type(uint256).max, "Friend request not found");
+        
+        // Add to both users' friend lists
+        friendsList[msg.sender].push(requester);
+        friendsList[requester].push(msg.sender);
+        
+        // Mark as friends
+        isFriend[msg.sender][requester] = true;
+        isFriend[requester][msg.sender] = true;
+        
+        // Remove from pending
+        uint256 lastIndex = pendingFriendRequests[msg.sender].length - 1;
+        if (requestIndex != lastIndex) {
+            pendingFriendRequests[msg.sender][requestIndex] = pendingFriendRequests[msg.sender][lastIndex];
+        }
+        pendingFriendRequests[msg.sender].pop();
+        
+        emit FriendRequestAccepted(msg.sender, requester, block.timestamp);
+    }
+
+    // Reject a friend request
+    function rejectFriendRequest(address requester) public {
+        require(requester != address(0), "Invalid requester address");
+        
+        // Find and remove the friend request
+        uint256 requestIndex = type(uint256).max;
+        for (uint256 i = 0; i < pendingFriendRequests[msg.sender].length; i++) {
+            if (pendingFriendRequests[msg.sender][i].requester == requester) {
+                requestIndex = i;
+                break;
+            }
+        }
+        
+        require(requestIndex != type(uint256).max, "Friend request not found");
+        
+        // Remove from pending
+        uint256 lastIndex = pendingFriendRequests[msg.sender].length - 1;
+        if (requestIndex != lastIndex) {
+            pendingFriendRequests[msg.sender][requestIndex] = pendingFriendRequests[msg.sender][lastIndex];
+        }
+        pendingFriendRequests[msg.sender].pop();
+        
+        emit FriendRequestRejected(msg.sender, requester, block.timestamp);
+    }
+
+    // Get current user's friends list
+    function getFriendsList() public view returns (address[] memory) {
+        return friendsList[msg.sender];
+    }
+
+    // Check if two users are friends
+    function areFriends(address user) public view returns (bool) {
+        return isFriend[msg.sender][user];
+    }
+
+    // Remove a friend from your list (one-way removal)
+    function removeFriend(address friend) public {
+        require(friend != address(0), "Invalid friend address");
+        require(isFriend[msg.sender][friend], "Not friends with this address");
+        
+        // Find and remove from current user's friends list
+        uint256 friendIndex = type(uint256).max;
+        for (uint256 i = 0; i < friendsList[msg.sender].length; i++) {
+            if (friendsList[msg.sender][i] == friend) {
+                friendIndex = i;
+                break;
+            }
+        }
+        
+        require(friendIndex != type(uint256).max, "Friend not found in list");
+        
+        // Remove by swapping with last element
+        uint256 lastIndex = friendsList[msg.sender].length - 1;
+        if (friendIndex != lastIndex) {
+            friendsList[msg.sender][friendIndex] = friendsList[msg.sender][lastIndex];
+        }
+        friendsList[msg.sender].pop();
+        
+        // Mark as not friends (only for current user)
+        isFriend[msg.sender][friend] = false;
+        
+        emit FriendRemoved(msg.sender, friend, block.timestamp);
+    }
+
+    // Get friend count
+    function getFriendCount() public view returns (uint256) {
+        return friendsList[msg.sender].length;
+    }
+
+    // Get pending requests count
+    function getPendingRequestCount() public view returns (uint256) {
+        return pendingFriendRequests[msg.sender].length;
+    }
+
+    // ==================== USER PROFILE FUNCTIONS ====================
+
+    // Set user's display name (name only, max 50 characters)
+    function setUserName(string memory _name) public {
+        require(bytes(_name).length > 0, "Name cannot be empty");
+        require(bytes(_name).length <= 50, "Name must be 50 characters or less");
+        
+        userNames[msg.sender] = _name;
+        emit UserNameSet(msg.sender, _name, block.timestamp);
+    }
+
+    // Get user's display name
+    function getUserName(address user) public view returns (string memory) {
+        return userNames[user];
     }
 }

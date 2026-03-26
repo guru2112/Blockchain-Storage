@@ -62,6 +62,12 @@ export default function Navbar() {
             <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700">
               {account.slice(0, 6)}...{account.slice(-4)}
             </span>
+            <Link
+              href="/dashboard"
+              className="rounded-full border border-slate-200 bg-white px-4 py-2 font-medium text-slate-700 transition hover:bg-slate-50"
+            >
+              Dashboard
+            </Link>
             <button
               onClick={handleLogout}
               className="rounded-full bg-slate-900 px-4 py-2 font-medium text-white transition hover:bg-slate-800"
