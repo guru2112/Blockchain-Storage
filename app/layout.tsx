@@ -1,5 +1,14 @@
+// app/layout.tsx
 import "./globals.css";
-import Navbar from "@/components/layout/Navbar";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+
+const inter = Inter({ subsets: ["latin"] });
+
+export const metadata: Metadata = {
+  title: "Decentralized Drive",
+  description: "Web3 File Storage",
+};
 
 export default function RootLayout({
   children,
@@ -8,8 +17,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 text-slate-900 antialiased">
-        <Navbar />
+      <body className={inter.className}>
+        {/* Remove the Navbar/Header from here! Just leave children */}
         {children}
       </body>
     </html>

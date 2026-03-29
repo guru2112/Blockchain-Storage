@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { connectWallet, signLogin } from "@/lib/wallet";
-import { getWallet, setWallet } from "@/lib/auth";
+import { connectWallet, signLogin } from "@/lib/utils/wallet";
+import { getWallet, setWallet } from "@/lib/utils/auth";
 
 export default function LoginPage() {
   const router = useRouter();

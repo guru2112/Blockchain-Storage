@@ -46,9 +46,16 @@ export default function CreateFolderModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-lg">
-        <h2 className="mb-4 text-2xl font-semibold text-slate-900">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-2xl relative">
+        <button 
+          onClick={onClose} 
+          className="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors"
+        >
+          ✕
+        </button>
+        
+        <h2 className="mb-6 text-xl font-bold text-slate-900 text-center">
           Create New Folder
         </h2>
 
@@ -60,7 +67,7 @@ export default function CreateFolderModal({
             setError(null);
           }}
           placeholder="Enter folder name"
-          className="mb-4 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 placeholder-slate-400"
+          className="mb-4 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
         />
 
         {error && (
@@ -72,16 +79,16 @@ export default function CreateFolderModal({
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300"
+            className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
           >
             Cancel
           </button>
           <button
             onClick={handleCreate}
             disabled={loading}
-            className="flex-1 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+            className="flex-1 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
           >
-            {loading ? "Creating..." : "Create"}
+            {loading ? "Creating..." : "Create Folder"}
           </button>
         </div>
       </div>
